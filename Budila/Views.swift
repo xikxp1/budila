@@ -18,13 +18,14 @@ struct RootView: View {
             ScannerScreen(
                 purpose: purpose,
                 isAvailable: model.scannerAvailable,
+                message: $model.message,
                 onScan: model.handleScannedPayload,
                 onEmergencyStop: model.emergencyStop,
                 onOpenSettings: model.openSettings
             )
         }
         .alert("Budila", isPresented: Binding(
-            get: { model.message != nil },
+            get: { model.scannerPurpose == nil && model.message != nil },
             set: { if !$0 { model.message = nil } }
         )) {
             Button("OK") { model.message = nil }

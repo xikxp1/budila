@@ -162,6 +162,7 @@ struct QRScannerView: UIViewControllerRepresentable {
 struct ScannerScreen: View {
     let purpose: ScannerPurpose
     let isAvailable: Bool
+    @Binding var message: String?
     let onScan: (String) -> Bool
     let onEmergencyStop: () -> Void
     let onOpenSettings: () -> Void
@@ -233,6 +234,14 @@ struct ScannerScreen: View {
             }
         }
         .interactiveDismissDisabled(purpose != .enroll)
+        .alert("Budila", isPresented: Binding(
+            get: { message != nil },
+            set: { if !$0 { message = nil } }
+        )) {
+            Button("OK") { message = nil }
+        } message: {
+            Text(message ?? "")
+        }
     }
 
     private var instruction: String {
