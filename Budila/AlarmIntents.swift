@@ -2,9 +2,9 @@ import AlarmKit
 import AppIntents
 
 struct ScanToStopIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Scan to Stop"
-    static var description = IntentDescription("Opens Budila and waits for the enrolled QR code.")
-    static var openAppWhenRun = true
+    static let title: LocalizedStringResource = "Scan to Stop"
+    static let description = IntentDescription("Opens Budila and waits for the enrolled QR code.")
+    static let openAppWhenRun = true
 
     @Parameter(title: "Alarm ID") var alarmID: String
     @Parameter(title: "Root alarm ID") var rootAlarmID: String
@@ -51,9 +51,9 @@ struct ScanToStopIntent: LiveActivityIntent {
 }
 
 struct SnoozeAlarmIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Snooze"
-    static var description = IntentDescription("Snoozes a Budila alarm for three minutes.")
-    static var openAppWhenRun = true
+    static let title: LocalizedStringResource = "Snooze"
+    static let description = IntentDescription("Snoozes a Budila alarm for three minutes.")
+    static let openAppWhenRun = true
 
     @Parameter(title: "Alarm ID") var alarmID: String
     @Parameter(title: "Root alarm ID") var rootAlarmID: String
