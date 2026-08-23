@@ -16,7 +16,7 @@ jobs:
   test:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate bundled resources
         run: |
           file Budila/Resources/alarm.caf | grep -q 'CoreAudio Format'
@@ -43,7 +43,7 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install App Store Connect API key
         run: |
           API_KEY_PATH="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
