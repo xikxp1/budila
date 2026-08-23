@@ -55,4 +55,56 @@ final class BudilaTests: XCTestCase {
         XCTAssertTrue(data.sessions.isEmpty)
         XCTAssertNil(data.pendingScanRootID)
     }
+
+    func testCompletingScanKeepsAnotherPendingAlarm() {
+        let completedID = UUID()
+        let pendingID = UUID()
+        var data = PersistedData(
+            sessions: [AlarmSession(
+                rootAlarmID: completedID,
+                activeAlarmID: UUID(),
+                guardAlarmID: nil,
+                snoozesUsed: 0,
+                kind: .snoozed
+            )],
+            pendingScanRootID: pendingID
+        )
+
+        _ = data.completeScan(rootAlarmID: completedID)
+
+        XCTAssertEqual(data.pendingScanRootID, pendingID)
+    }
+
+    func testConcurrentStoreUpdatesDoNotLoseAlarms() throws {
+        let suite = "BudilaTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = BudilaStore(defaults: defaults)
+
+        DispatchQueue.concurrentPerform(iterations: 20) { minute in
+            store.update { $0.upsert(AlarmDefinition(hour: 7, minute: minute)) }
+        }
+
+        XCTAssertEqual(store.load().alarms.count, 20)
+    }
+
+    func testScannerRetriesAfterRejectedPayload() {
+        var payloads: [String] = []
+        let coordinator = QRScannerView.Coordinator(
+            onScan: {
+                payloads.append($0)
+                return $0 == "expected"
+            },
+            onUnavailable: {}
+        )
+
+        coordinator.handle("wrong")
+        coordinator.handle("wrong")
+        coordinator.resetRejectedPayload()
+        coordinator.handle("expected")
+        coordinator.handle("ignored")
+
+        XCTAssertEqual(payloads, ["wrong", "expected"])
+        XCTAssertTrue(coordinator.completed)
+    }
 }

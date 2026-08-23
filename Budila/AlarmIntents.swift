@@ -73,21 +73,21 @@ struct SnoozeAlarmIntent: LiveActivityIntent {
               let rootID = UUID(uuidString: rootAlarmID) else { return .result() }
 
         let store = BudilaStore()
-        var data = store.load()
-        let used = data.sessions.first(where: { $0.rootAlarmID == rootID })?.snoozesUsed ?? 0
-        if SnoozeLimit.allows(used) {
-            if (try? AlarmManager.shared.countdown(id: alarmID)) != nil {
-                data.upsert(AlarmSession(
-                    rootAlarmID: rootID,
-                    activeAlarmID: alarmID,
-                    guardAlarmID: nil,
-                    snoozesUsed: used + 1,
-                    kind: .snoozed
-                ))
+        store.update { data in
+            let used = data.sessions.first(where: { $0.rootAlarmID == rootID })?.snoozesUsed ?? 0
+            if SnoozeLimit.allows(used) {
+                if (try? AlarmManager.shared.countdown(id: alarmID)) != nil {
+                    data.upsert(AlarmSession(
+                        rootAlarmID: rootID,
+                        activeAlarmID: alarmID,
+                        guardAlarmID: nil,
+                        snoozesUsed: used + 1,
+                        kind: .snoozed
+                    ))
+                }
             }
+            data.pendingScanRootID = rootID
         }
-        data.pendingScanRootID = rootID
-        store.save(data)
         return .result()
     }
 }

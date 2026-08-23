@@ -18,7 +18,7 @@ struct RootView: View {
             ScannerScreen(
                 purpose: purpose,
                 isAvailable: model.scannerAvailable,
-                onScan: { payload in Task { await model.handleScannedPayload(payload) } },
+                onScan: model.handleScannedPayload,
                 onEmergencyStop: model.emergencyStop,
                 onOpenSettings: model.openSettings
             )
@@ -178,7 +178,7 @@ private struct AlarmRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
-            Toggle("", isOn: Binding(get: { alarm.enabled }, set: onToggle))
+            Toggle("", isOn: Binding(get: { alarm.enabled }, set: { onToggle($0) }))
                 .labelsHidden()
                 .accessibilityLabel("Enable \(alarm.displayLabel)")
         }

@@ -4,10 +4,11 @@ import UIKit
 
 struct QRScannerView: UIViewControllerRepresentable {
     let isTorchOn: Bool
-    let onScan: (String) -> Void
+    let onScan: (String) -> Bool
+    let onUnavailable: () -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onScan: onScan)
+        Coordinator(onScan: onScan, onUnavailable: onUnavailable)
     }
 
     func makeUIViewController(context: Context) -> UIViewController {
@@ -37,24 +38,53 @@ struct QRScannerView: UIViewControllerRepresentable {
     }
 
     final class Coordinator: NSObject, AVCaptureMetadataOutputObjectsDelegate, @unchecked Sendable {
-        let onScan: (String) -> Void
+        let onScan: (String) -> Bool
+        let onUnavailable: () -> Void
         let session = AVCaptureSession()
         private let queue = DispatchQueue(label: "dev.xikxp1.budila.camera")
         private var camera: AVCaptureDevice?
-        private var completed = false
+        private var rejectedPayload: String?
+        private(set) var completed = false
 
-        init(onScan: @escaping (String) -> Void) {
+        init(onScan: @escaping (String) -> Bool, onUnavailable: @escaping () -> Void) {
             self.onScan = onScan
+            self.onUnavailable = onUnavailable
+            super.init()
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(sessionFailed(_:)),
+                name: AVCaptureSession.runtimeErrorNotification,
+                object: session
+            )
+        }
+
+        deinit {
+            NotificationCenter.default.removeObserver(self)
         }
 
         func start() {
             queue.async { [self] in
-                guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-                      let input = try? AVCaptureDeviceInput(device: camera),
-                      session.canAddInput(input) else { return }
+                guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+                    reportFailure()
+                    return
+                }
+                let input: AVCaptureDeviceInput
+                do {
+                    input = try AVCaptureDeviceInput(device: camera)
+                } catch {
+                    reportFailure()
+                    return
+                }
+                guard session.canAddInput(input) else {
+                    reportFailure()
+                    return
+                }
 
                 let output = AVCaptureMetadataOutput()
-                guard session.canAddOutput(output) else { return }
+                guard session.canAddOutput(output) else {
+                    reportFailure()
+                    return
+                }
 
                 session.beginConfiguration()
                 session.addInput(input)
@@ -65,6 +95,21 @@ struct QRScannerView: UIViewControllerRepresentable {
                 self.camera = camera
                 session.startRunning()
             }
+        }
+
+        func handle(_ payload: String) {
+            guard !completed, payload != rejectedPayload else { return }
+            completed = onScan(payload)
+            rejectedPayload = completed ? nil : payload
+        }
+
+        func resetRejectedPayload() {
+            rejectedPayload = nil
+        }
+
+        func reportUnavailable() {
+            completed = true
+            onUnavailable()
         }
 
         func setTorch(_ isOn: Bool) {
@@ -85,13 +130,23 @@ struct QRScannerView: UIViewControllerRepresentable {
             didOutput metadataObjects: [AVMetadataObject],
             from connection: AVCaptureConnection
         ) {
-            guard !completed else { return }
-            for case let code as AVMetadataMachineReadableCodeObject in metadataObjects {
-                guard code.type == .qr, let payload = code.stringValue else { continue }
-                completed = true
-                onScan(payload)
+            if metadataObjects.isEmpty {
+                resetRejectedPayload()
                 return
             }
+            for case let code as AVMetadataMachineReadableCodeObject in metadataObjects {
+                guard code.type == .qr, let payload = code.stringValue else { continue }
+                handle(payload)
+                return
+            }
+        }
+
+        @objc private func sessionFailed(_ notification: Notification) {
+            reportFailure()
+        }
+
+        private func reportFailure() {
+            DispatchQueue.main.async { [weak self] in self?.reportUnavailable() }
         }
 
         private func setTorchNow(_ isOn: Bool) {
@@ -107,18 +162,24 @@ struct QRScannerView: UIViewControllerRepresentable {
 struct ScannerScreen: View {
     let purpose: ScannerPurpose
     let isAvailable: Bool
-    let onScan: (String) -> Void
+    let onScan: (String) -> Bool
     let onEmergencyStop: () -> Void
     let onOpenSettings: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var isTorchOn = false
+    @State private var scannerFailed = false
 
     var body: some View {
         NavigationStack {
             Group {
-                if isAvailable {
+                if isAvailable && !scannerFailed {
                     ZStack(alignment: .bottom) {
-                        QRScannerView(isTorchOn: isTorchOn, onScan: onScan).ignoresSafeArea()
+                        QRScannerView(
+                            isTorchOn: isTorchOn,
+                            onScan: onScan,
+                            onUnavailable: { scannerFailed = true }
+                        )
+                        .ignoresSafeArea()
                         VStack(spacing: 12) {
                             if AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)?.hasTorch == true {
                                 Button {
@@ -148,6 +209,9 @@ struct ScannerScreen: View {
                     )
                     .safeAreaInset(edge: .bottom) {
                         VStack(spacing: 12) {
+                            if isAvailable {
+                                Button("Try Again") { scannerFailed = false }
+                            }
                             Button("Open Settings", action: onOpenSettings)
                                 .buttonStyle(.borderedProminent)
                             if case .dismiss = purpose {

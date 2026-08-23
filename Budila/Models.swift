@@ -96,14 +96,16 @@ struct PersistedData: Codable, Equatable {
     }
 
     mutating func completeScan(rootAlarmID: UUID) -> AlarmSession? {
-        pendingScanRootID = nil
+        if pendingScanRootID == rootAlarmID { pendingScanRootID = nil }
         guard let index = sessions.firstIndex(where: { $0.rootAlarmID == rootAlarmID }) else { return nil }
         return sessions.remove(at: index)
     }
 }
 
-struct BudilaStore {
+struct BudilaStore: @unchecked Sendable {
     static let storageKey = "budila.data.v1"
+    // ponytail: process-local lock; use coordinated file storage if alarm intents move to another process.
+    private static let lock = NSLock()
     let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -111,6 +113,28 @@ struct BudilaStore {
     }
 
     func load() -> PersistedData {
+        Self.lock.lock()
+        defer { Self.lock.unlock() }
+        return loadUnlocked()
+    }
+
+    func save(_ data: PersistedData) {
+        Self.lock.lock()
+        defer { Self.lock.unlock() }
+        saveUnlocked(data)
+    }
+
+    @discardableResult
+    func update(_ change: (inout PersistedData) throws -> Void) rethrows -> PersistedData {
+        Self.lock.lock()
+        defer { Self.lock.unlock() }
+        var data = loadUnlocked()
+        try change(&data)
+        saveUnlocked(data)
+        return data
+    }
+
+    private func loadUnlocked() -> PersistedData {
         guard let bytes = defaults.data(forKey: Self.storageKey),
               let data = try? JSONDecoder().decode(PersistedData.self, from: bytes) else {
             return PersistedData()
@@ -118,16 +142,9 @@ struct BudilaStore {
         return data
     }
 
-    func save(_ data: PersistedData) {
+    private func saveUnlocked(_ data: PersistedData) {
         guard let bytes = try? JSONEncoder().encode(data) else { return }
         defaults.set(bytes, forKey: Self.storageKey)
-    }
-
-    func update(_ change: (inout PersistedData) -> Void) {
-        // ponytail: one UserDefaults document is enough for one active user; move to a shared actor-backed store if concurrent alarm actions become common.
-        var data = load()
-        change(&data)
-        save(data)
     }
 }
 

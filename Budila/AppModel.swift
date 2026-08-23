@@ -91,28 +91,27 @@ final class AppModel: ObservableObject {
         scannerPurpose = .enroll
     }
 
-    func handleScannedPayload(_ payload: String) async {
+    func handleScannedPayload(_ payload: String) -> Bool {
         switch scannerPurpose {
         case .enroll:
-            data.qrDigest = QRCodeDigest.make(payload)
-            store.save(data)
+            data = store.update { $0.qrDigest = QRCodeDigest.make(payload) }
             scannerPurpose = nil
+            return true
         case .dismiss(let rootID):
             guard QRCodeDigest.matches(payload, digest: data.qrDigest) else {
                 message = "That QR code does not match."
-                return
+                return false
             }
-            finishAlarm(rootID: rootID)
-            scannerPurpose = nil
+            if finishAlarm(rootID: rootID) { scannerPurpose = nil }
+            return scannerPurpose == nil
         case nil:
-            break
+            return false
         }
     }
 
     func emergencyStop() {
         guard case .dismiss(let rootID) = scannerPurpose else { return }
-        finishAlarm(rootID: rootID)
-        scannerPurpose = nil
+        if finishAlarm(rootID: rootID) { scannerPurpose = nil }
     }
 
     func save(_ alarm: AlarmDefinition) async {
@@ -120,17 +119,21 @@ final class AppModel: ObservableObject {
             message = "Choose at least one weekday."
             return
         }
-        AlarmScheduler.cancel(alarm.id)
+        do {
+            try AlarmScheduler.cancel(alarm.id)
+        } catch {
+            message = error.localizedDescription
+            refresh()
+            return
+        }
         do {
             if alarm.enabled { try await AlarmScheduler.schedule(alarm) }
-            data.upsert(alarm)
-            store.save(data)
+            data = store.update { $0.upsert(alarm) }
             refresh()
         } catch {
             var failed = alarm
             failed.enabled = false
-            data.upsert(failed)
-            store.save(data)
+            data = store.update { $0.upsert(failed) }
             message = error.localizedDescription
             refresh()
         }
@@ -143,32 +146,49 @@ final class AppModel: ObservableObject {
     }
 
     func delete(_ alarm: AlarmDefinition) {
-        AlarmScheduler.cancel(alarm.id)
-        if let session = data.sessions.first(where: { $0.rootAlarmID == alarm.id }) {
-            AlarmScheduler.cancel(session.activeAlarmID)
-            if let guardID = session.guardAlarmID { AlarmScheduler.cancel(guardID) }
+        do {
+            data = try store.update { data in
+                var alarmIDs = Set([alarm.id])
+                if let session = data.sessions.first(where: { $0.rootAlarmID == alarm.id }) {
+                    alarmIDs.insert(session.activeAlarmID)
+                    if let guardID = session.guardAlarmID { alarmIDs.insert(guardID) }
+                }
+                for id in alarmIDs { try AlarmScheduler.cancel(id) }
+                data.alarms.removeAll { $0.id == alarm.id }
+                data.sessions.removeAll { $0.rootAlarmID == alarm.id }
+                if data.pendingScanRootID == alarm.id { data.pendingScanRootID = nil }
+            }
+            refresh()
+        } catch {
+            message = error.localizedDescription
+            refresh()
         }
-        data.alarms.removeAll { $0.id == alarm.id }
-        data.sessions.removeAll { $0.rootAlarmID == alarm.id }
-        store.save(data)
-        refresh()
     }
 
-    private func finishAlarm(rootID: UUID) {
-        let session = data.completeScan(rootAlarmID: rootID)
-        if let session {
-            switch session.kind {
-            case .snoozed:
-                AlarmScheduler.stop(session.activeAlarmID)
-            case .guardAlarm:
-                AlarmScheduler.stop(session.activeAlarmID)
-                AlarmScheduler.cancel(session.activeAlarmID)
+    private func finishAlarm(rootID: UUID) -> Bool {
+        do {
+            data = try store.update { data in
+                if let session = data.sessions.first(where: { $0.rootAlarmID == rootID }) {
+                    switch session.kind {
+                    case .snoozed:
+                        try AlarmScheduler.stop(session.activeAlarmID)
+                    case .guardAlarm:
+                        try AlarmScheduler.cancel(session.activeAlarmID)
+                    }
+                    if let guardID = session.guardAlarmID, guardID != session.activeAlarmID {
+                        try AlarmScheduler.cancel(guardID)
+                    }
+                } else if let state = alarmStates[rootID], state == .alerting || state == .countdown || state == .paused {
+                    try AlarmScheduler.stop(rootID)
+                }
+                _ = data.completeScan(rootAlarmID: rootID)
             }
-            if let guardID = session.guardAlarmID { AlarmScheduler.cancel(guardID) }
-        } else if let state = alarmStates[rootID], state == .alerting || state == .countdown || state == .paused {
-            AlarmScheduler.stop(rootID)
+            refresh()
+            return true
+        } catch {
+            message = error.localizedDescription
+            refresh()
+            return false
         }
-        store.save(data)
-        refresh()
     }
 }

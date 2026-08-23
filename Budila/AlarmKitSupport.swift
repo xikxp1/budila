@@ -16,7 +16,7 @@ enum AlarmScheduler {
             rootAlarmID: alarm.id,
             label: alarm.displayLabel
         )
-        try await AlarmManager.shared.schedule(id: alarm.id, configuration: configuration)
+        _ = try await AlarmManager.shared.schedule(id: alarm.id, configuration: configuration)
     }
 
     static func scheduleGuard(id: UUID, rootAlarmID: UUID, label: String) async throws {
@@ -26,15 +26,18 @@ enum AlarmScheduler {
             rootAlarmID: rootAlarmID,
             label: label
         )
-        try await AlarmManager.shared.schedule(id: id, configuration: configuration)
+        _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
     }
 
-    static func cancel(_ id: UUID) {
-        try? AlarmManager.shared.cancel(id: id)
+    static func cancel(_ id: UUID) throws {
+        guard try AlarmManager.shared.alarms.contains(where: { $0.id == id }) else { return }
+        try AlarmManager.shared.cancel(id: id)
     }
 
-    static func stop(_ id: UUID) {
-        try? AlarmManager.shared.stop(id: id)
+    static func stop(_ id: UUID) throws {
+        guard let alarm = try AlarmManager.shared.alarms.first(where: { $0.id == id }),
+              alarm.state == .alerting || alarm.state == .countdown || alarm.state == .paused else { return }
+        try AlarmManager.shared.stop(id: id)
     }
 
     private static func makeConfiguration(
@@ -44,13 +47,8 @@ enum AlarmScheduler {
         label: String
     ) -> Configuration {
         let title = LocalizedStringResource(
-            String.LocalizationValue(stringLiteral: label),
+            String.LocalizationValue(stringLiteral: "\(label) · Scan QR to finish"),
             bundle: .main
-        )
-        let stopButton = AlarmButton(
-            text: "Scan to Stop",
-            textColor: .white,
-            systemImageName: "qrcode.viewfinder"
         )
         let snoozeButton = AlarmButton(
             text: "Snooze",
@@ -59,7 +57,6 @@ enum AlarmScheduler {
         )
         let alert = AlarmPresentation.Alert(
             title: title,
-            stopButton: stopButton,
             secondaryButton: snoozeButton,
             secondaryButtonBehavior: .custom
         )
