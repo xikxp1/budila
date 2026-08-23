@@ -54,7 +54,12 @@ final class AppModel: ObservableObject {
         data = store.load()
         alarmAuthorization = AlarmManager.shared.authorizationState
         cameraAuthorization = AVCaptureDevice.authorizationStatus(for: .video)
-        alarmStates = Dictionary(uniqueKeysWithValues: AlarmManager.shared.alarms.map { ($0.id, $0.state) })
+        do {
+            let alarms = try AlarmManager.shared.alarms
+            alarmStates = Dictionary(uniqueKeysWithValues: alarms.map { ($0.id, $0.state) })
+        } catch {
+            message = error.localizedDescription
+        }
         if let rootID = data.pendingScanRootID {
             scannerPurpose = .dismiss(rootID)
         }
