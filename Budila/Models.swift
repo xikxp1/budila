@@ -100,6 +100,17 @@ struct PersistedData: Codable, Equatable {
         guard let index = sessions.firstIndex(where: { $0.rootAlarmID == rootAlarmID }) else { return nil }
         return sessions.remove(at: index)
     }
+
+    mutating func removeSession(for rootAlarmID: UUID) -> Set<UUID> {
+        var alarmIDs = Set([rootAlarmID])
+        if let session = sessions.first(where: { $0.rootAlarmID == rootAlarmID }) {
+            alarmIDs.insert(session.activeAlarmID)
+            if let guardID = session.guardAlarmID { alarmIDs.insert(guardID) }
+        }
+        sessions.removeAll { $0.rootAlarmID == rootAlarmID }
+        if pendingScanRootID == rootAlarmID { pendingScanRootID = nil }
+        return alarmIDs
+    }
 }
 
 struct BudilaStore: @unchecked Sendable {

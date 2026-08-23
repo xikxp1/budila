@@ -75,6 +75,28 @@ final class BudilaTests: XCTestCase {
         XCTAssertEqual(data.pendingScanRootID, pendingID)
     }
 
+    func testRemovingSessionReturnsEveryAlarmIDAndClearsState() {
+        let rootID = UUID()
+        let activeID = UUID()
+        let guardID = UUID()
+        var data = PersistedData(
+            sessions: [AlarmSession(
+                rootAlarmID: rootID,
+                activeAlarmID: activeID,
+                guardAlarmID: guardID,
+                snoozesUsed: 1,
+                kind: .guardAlarm
+            )],
+            pendingScanRootID: rootID
+        )
+
+        let alarmIDs = data.removeSession(for: rootID)
+
+        XCTAssertEqual(alarmIDs, Set([rootID, activeID, guardID]))
+        XCTAssertTrue(data.sessions.isEmpty)
+        XCTAssertNil(data.pendingScanRootID)
+    }
+
     func testConcurrentStoreUpdatesDoNotLoseAlarms() throws {
         let suite = "BudilaTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))

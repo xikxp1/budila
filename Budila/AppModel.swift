@@ -120,7 +120,9 @@ final class AppModel: ObservableObject {
             return
         }
         do {
-            try AlarmScheduler.cancel(alarm.id)
+            data = try store.update { data in
+                for id in data.removeSession(for: alarm.id) { try AlarmScheduler.cancel(id) }
+            }
         } catch {
             message = error.localizedDescription
             refresh()
@@ -148,15 +150,8 @@ final class AppModel: ObservableObject {
     func delete(_ alarm: AlarmDefinition) {
         do {
             data = try store.update { data in
-                var alarmIDs = Set([alarm.id])
-                if let session = data.sessions.first(where: { $0.rootAlarmID == alarm.id }) {
-                    alarmIDs.insert(session.activeAlarmID)
-                    if let guardID = session.guardAlarmID { alarmIDs.insert(guardID) }
-                }
-                for id in alarmIDs { try AlarmScheduler.cancel(id) }
+                for id in data.removeSession(for: alarm.id) { try AlarmScheduler.cancel(id) }
                 data.alarms.removeAll { $0.id == alarm.id }
-                data.sessions.removeAll { $0.rootAlarmID == alarm.id }
-                if data.pendingScanRootID == alarm.id { data.pendingScanRootID = nil }
             }
             refresh()
         } catch {
