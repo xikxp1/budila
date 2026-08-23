@@ -223,6 +223,7 @@ struct AlarmEditor: View {
                             .frame(maxWidth: .infinity, minHeight: 38)
                             .foregroundStyle(alarm.weekdays.contains(day) ? .black : .orange)
                             .background(alarm.weekdays.contains(day) ? Color.orange : Color.orange.opacity(0.14), in: Circle())
+                            .buttonStyle(.plain)
                             .accessibilityLabel(day.shortName)
                             .accessibilityAddTraits(alarm.weekdays.contains(day) ? .isSelected : [])
                         }
