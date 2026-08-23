@@ -1,0 +1,209 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B10000000000000000000001 /* BudilaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000001 /* BudilaApp.swift */; };
+		B10000000000000000000002 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000002 /* Models.swift */; };
+		B10000000000000000000003 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000003 /* AppModel.swift */; };
+		B10000000000000000000004 /* AlarmKitSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000004 /* AlarmKitSupport.swift */; };
+		B10000000000000000000005 /* AlarmIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000005 /* AlarmIntents.swift */; };
+		B10000000000000000000006 /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000006 /* QRScanner.swift */; };
+		B10000000000000000000007 /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000007 /* Views.swift */; };
+		B10000000000000000000008 /* BudilaAlarmMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000001 /* BudilaAlarmMetadata.swift */; };
+		B10000000000000000000009 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000009 /* Assets.xcassets */; };
+		B1000000000000000000000A /* alarm.caf in Resources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000000A /* alarm.caf */; };
+		B20000000000000000000001 /* BudilaAlarmWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000000000000000000001 /* BudilaAlarmWidget.swift */; };
+		B20000000000000000000002 /* BudilaAlarmMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000001 /* BudilaAlarmMetadata.swift */; };
+		B30000000000000000000001 /* BudilaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F40000000000000000000001 /* BudilaTests.swift */; };
+		B40000000000000000000001 /* BudilaAlarmWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = FP0000000000000000000002 /* BudilaAlarmWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C10000000000000000000001 = {isa = PBXContainerItemProxy; containerPortal = P00000000000000000000001 /* Project object */; proxyType = 1; remoteGlobalIDString = T20000000000000000000001; remoteInfo = BudilaAlarmWidget; };
+		C10000000000000000000002 = {isa = PBXContainerItemProxy; containerPortal = P00000000000000000000001 /* Project object */; proxyType = 1; remoteGlobalIDString = T10000000000000000000001; remoteInfo = Budila; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		PH1000000000000000000004 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (B40000000000000000000001 /* BudilaAlarmWidget.appex in Embed App Extensions */, );
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		F10000000000000000000001 /* BudilaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudilaApp.swift; sourceTree = "<group>"; };
+		F10000000000000000000002 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		F10000000000000000000003 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		F10000000000000000000004 /* AlarmKitSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmKitSupport.swift; sourceTree = "<group>"; };
+		F10000000000000000000005 /* AlarmIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmIntents.swift; sourceTree = "<group>"; };
+		F10000000000000000000006 /* QRScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanner.swift; sourceTree = "<group>"; };
+		F10000000000000000000007 /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
+		F10000000000000000000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F10000000000000000000009 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F1000000000000000000000A /* alarm.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.x-caf; path = alarm.caf; sourceTree = "<group>"; };
+		F1000000000000000000000B /* AppIconSource.svg */ = {isa = PBXFileReference; lastKnownFileType = image.svg; path = AppIconSource.svg; sourceTree = "<group>"; };
+		F20000000000000000000001 /* BudilaAlarmMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudilaAlarmMetadata.swift; sourceTree = "<group>"; };
+		F30000000000000000000001 /* BudilaAlarmWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudilaAlarmWidget.swift; sourceTree = "<group>"; };
+		F30000000000000000000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F40000000000000000000001 /* BudilaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudilaTests.swift; sourceTree = "<group>"; };
+		FP0000000000000000000001 /* Budila.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Budila.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FP0000000000000000000002 /* BudilaAlarmWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BudilaAlarmWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FP0000000000000000000003 /* BudilaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BudilaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		PH1000000000000000000002 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		PH2000000000000000000002 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		PH3000000000000000000002 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		G00000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				G10000000000000000000001 /* Budila */,
+				G20000000000000000000001 /* Shared */,
+				G30000000000000000000001 /* BudilaWidget */,
+				G40000000000000000000001 /* BudilaTests */,
+				G50000000000000000000001 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		G10000000000000000000001 /* Budila */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000001 /* BudilaApp.swift */,
+				F10000000000000000000002 /* Models.swift */,
+				F10000000000000000000003 /* AppModel.swift */,
+				F10000000000000000000004 /* AlarmKitSupport.swift */,
+				F10000000000000000000005 /* AlarmIntents.swift */,
+				F10000000000000000000006 /* QRScanner.swift */,
+				F10000000000000000000007 /* Views.swift */,
+				F10000000000000000000008 /* Info.plist */,
+				F10000000000000000000009 /* Assets.xcassets */,
+				G11000000000000000000001 /* Resources */,
+			);
+			path = Budila;
+			sourceTree = "<group>";
+		};
+		G11000000000000000000001 /* Resources */ = {
+			isa = PBXGroup;
+			children = (F1000000000000000000000A /* alarm.caf */, F1000000000000000000000B /* AppIconSource.svg */, );
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		G20000000000000000000001 /* Shared */ = {isa = PBXGroup; children = (F20000000000000000000001 /* BudilaAlarmMetadata.swift */, ); path = Shared; sourceTree = "<group>"; };
+		G30000000000000000000001 /* BudilaWidget */ = {isa = PBXGroup; children = (F30000000000000000000001 /* BudilaAlarmWidget.swift */, F30000000000000000000002 /* Info.plist */, ); path = BudilaWidget; sourceTree = "<group>"; };
+		G40000000000000000000001 /* BudilaTests */ = {isa = PBXGroup; children = (F40000000000000000000001 /* BudilaTests.swift */, ); path = BudilaTests; sourceTree = "<group>"; };
+		G50000000000000000000001 /* Products */ = {isa = PBXGroup; children = (FP0000000000000000000001 /* Budila.app */, FP0000000000000000000002 /* BudilaAlarmWidget.appex */, FP0000000000000000000003 /* BudilaTests.xctest */, ); name = Products; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		T10000000000000000000001 /* Budila */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CL10000000000000000000001 /* Build configuration list for PBXNativeTarget "Budila" */;
+			buildPhases = (PH1000000000000000000001, PH1000000000000000000002, PH1000000000000000000003, PH1000000000000000000004, );
+			buildRules = ();
+			dependencies = (D10000000000000000000001, );
+			name = Budila;
+			productName = Budila;
+			productReference = FP0000000000000000000001 /* Budila.app */;
+			productType = "com.apple.product-type.application";
+		};
+		T20000000000000000000001 /* BudilaAlarmWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CL20000000000000000000001 /* Build configuration list for PBXNativeTarget "BudilaAlarmWidget" */;
+			buildPhases = (PH2000000000000000000001, PH2000000000000000000002, PH2000000000000000000003, );
+			buildRules = ();
+			dependencies = ();
+			name = BudilaAlarmWidget;
+			productName = BudilaAlarmWidget;
+			productReference = FP0000000000000000000002 /* BudilaAlarmWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		T30000000000000000000001 /* BudilaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CL30000000000000000000001 /* Build configuration list for PBXNativeTarget "BudilaTests" */;
+			buildPhases = (PH3000000000000000000001, PH3000000000000000000002, PH3000000000000000000003, );
+			buildRules = ();
+			dependencies = (D10000000000000000000002, );
+			name = BudilaTests;
+			productName = BudilaTests;
+			productReference = FP0000000000000000000003 /* BudilaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		P00000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2620;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					T10000000000000000000001 = {CreatedOnToolsVersion = 26.2; ProvisioningStyle = Automatic; };
+					T20000000000000000000001 = {CreatedOnToolsVersion = 26.2; ProvisioningStyle = Automatic; };
+					T30000000000000000000001 = {CreatedOnToolsVersion = 26.2; TestTargetID = T10000000000000000000001; };
+				};
+			};
+			buildConfigurationList = CL00000000000000000000001 /* Build configuration list for PBXProject "Budila" */;
+			compatibilityVersion = "Xcode 16.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base, );
+			mainGroup = G00000000000000000000001;
+			productRefGroup = G50000000000000000000001 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (T10000000000000000000001 /* Budila */, T20000000000000000000001 /* BudilaAlarmWidget */, T30000000000000000000001 /* BudilaTests */, );
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		PH1000000000000000000003 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (B10000000000000000000009 /* Assets.xcassets in Resources */, B1000000000000000000000A /* alarm.caf in Resources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		PH2000000000000000000003 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		PH3000000000000000000003 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		PH1000000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B10000000000000000000001, B10000000000000000000002, B10000000000000000000003, B10000000000000000000004, B10000000000000000000005, B10000000000000000000006, B10000000000000000000007, B10000000000000000000008, ); runOnlyForDeploymentPostprocessing = 0; };
+		PH2000000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B20000000000000000000001, B20000000000000000000002, ); runOnlyForDeploymentPostprocessing = 0; };
+		PH3000000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B30000000000000000000001, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D10000000000000000000001 = {isa = PBXTargetDependency; target = T20000000000000000000001 /* BudilaAlarmWidget */; targetProxy = C10000000000000000000001; };
+		D10000000000000000000002 = {isa = PBXTargetDependency; target = T10000000000000000000001 /* Budila */; targetProxy = C10000000000000000000002; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		BC0000000000000000000001 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_TESTABILITY = YES; GCC_C_LANGUAGE_STANDARD = gnu17; IPHONEOS_DEPLOYMENT_TARGET = 26.1; ONLY_ACTIVE_ARCH = YES; SDKROOT = iphoneos; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Debug; };
+		BC0000000000000000000002 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; ENABLE_NS_ASSERTIONS = NO; GCC_C_LANGUAGE_STANDARD = gnu17; IPHONEOS_DEPLOYMENT_TARGET = 26.1; SDKROOT = iphoneos; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_OPTIMIZATION_LEVEL = "-O"; VALIDATE_PRODUCT = YES; }; name = Release; };
+		BC1000000000000000000001 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Budila/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 26.1; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", ); MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = dev.xikxp1.budila; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_STRICT_CONCURRENCY = targeted; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; }; name = Debug; };
+		BC1000000000000000000002 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Budila/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 26.1; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", ); MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = dev.xikxp1.budila; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_STRICT_CONCURRENCY = targeted; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; }; name = Release; };
+		BC2000000000000000000001 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = BudilaWidget/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 26.1; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks", ); MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = dev.xikxp1.budila.AlarmWidget; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_STRICT_CONCURRENCY = targeted; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; }; name = Debug; };
+		BC2000000000000000000002 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = BudilaWidget/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 26.1; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks", ); MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = dev.xikxp1.budila.AlarmWidget; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_STRICT_CONCURRENCY = targeted; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; }; name = Release; };
+		BC3000000000000000000001 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 26.1; PRODUCT_BUNDLE_IDENTIFIER = dev.xikxp1.budilaTests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_STRICT_CONCURRENCY = targeted; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Budila.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Budila"; }; name = Debug; };
+		BC3000000000000000000002 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 26.1; PRODUCT_BUNDLE_IDENTIFIER = dev.xikxp1.budilaTests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_STRICT_CONCURRENCY = targeted; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Budila.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Budila"; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CL00000000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (BC0000000000000000000001, BC0000000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		CL10000000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (BC1000000000000000000001, BC1000000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		CL20000000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (BC2000000000000000000001, BC2000000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		CL30000000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (BC3000000000000000000001, BC3000000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = P00000000000000000000001 /* Project object */;
+}

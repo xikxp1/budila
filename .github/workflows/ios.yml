@@ -1,0 +1,99 @@
+name: iOS
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+
+jobs:
+  test:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate bundled resources
+        run: |
+          file Budila/Resources/alarm.caf | grep -q 'CoreAudio Format'
+          afinfo Budila/Resources/alarm.caf | grep -q 'estimated duration: 29.000'
+          sips -g pixelWidth -g pixelHeight -g hasAlpha Budila/Assets.xcassets/AppIcon.appiconset/AppIcon.png | grep -q 'pixelWidth: 1024'
+          sips -g pixelWidth -g pixelHeight -g hasAlpha Budila/Assets.xcassets/AppIcon.appiconset/AppIcon.png | grep -q 'pixelHeight: 1024'
+          sips -g hasAlpha Budila/Assets.xcassets/AppIcon.appiconset/AppIcon.png | grep -q 'hasAlpha: no'
+      - name: Test
+        run: >-
+          xcodebuild test
+          -project Budila.xcodeproj
+          -scheme Budila
+          -configuration Debug
+          -destination 'platform=iOS Simulator,name=iPhone 16e,OS=26.2'
+          CODE_SIGNING_ALLOWED=NO
+
+  testflight:
+    if: github.event_name == 'workflow_dispatch'
+    needs: test
+    runs-on: macos-26
+    env:
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
+      CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install signing credentials
+        env:
+          KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          CERTIFICATE_PATH="$RUNNER_TEMP/distribution.p12"
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+          KEYCHAIN_PATH="$RUNNER_TEMP/budila-signing.keychain-db"
+          printf '%s' "$CERTIFICATE_BASE64" | base64 -D > "$CERTIFICATE_PATH"
+          printf '%s' "$ASC_PRIVATE_KEY_BASE64" | base64 -D > "$API_KEY_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          echo "API_KEY_PATH=$API_KEY_PATH" >> "$GITHUB_ENV"
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -project Budila.xcodeproj \
+            -scheme Budila \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Budila.xcarchive" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+      - name: Upload to TestFlight
+        run: |
+          EXPORT_OPTIONS="$RUNNER_TEMP/ExportOptions.plist"
+          plutil -create xml1 "$EXPORT_OPTIONS"
+          plutil -insert method -string app-store-connect "$EXPORT_OPTIONS"
+          plutil -insert destination -string upload "$EXPORT_OPTIONS"
+          plutil -insert signingStyle -string automatic "$EXPORT_OPTIONS"
+          plutil -insert teamID -string "$APPLE_TEAM_ID" "$EXPORT_OPTIONS"
+          plutil -insert manageAppVersionAndBuildNumber -bool NO "$EXPORT_OPTIONS"
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Budila.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$EXPORT_OPTIONS" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+      - name: Remove temporary keychain
+        if: always()
+        run: security delete-keychain "$KEYCHAIN_PATH" || true
