@@ -1,7 +1,9 @@
+import AVFoundation
 import SwiftUI
 import VisionKit
 
 struct QRScannerView: UIViewControllerRepresentable {
+    let isTorchOn: Bool
     let onScan: (String) -> Void
 
     func makeCoordinator() -> Coordinator {
@@ -23,10 +25,21 @@ struct QRScannerView: UIViewControllerRepresentable {
         return controller
     }
 
-    func updateUIViewController(_ controller: DataScannerViewController, context: Context) {}
+    func updateUIViewController(_ controller: DataScannerViewController, context: Context) {
+        Self.setTorch(isTorchOn)
+    }
 
     static func dismantleUIViewController(_ controller: DataScannerViewController, coordinator: Coordinator) {
+        setTorch(false)
         controller.stopScanning()
+    }
+
+    private static func setTorch(_ isOn: Bool) {
+        guard let camera = AVCaptureDevice.default(for: .video), camera.hasTorch else { return }
+        let mode: AVCaptureDevice.TorchMode = isOn ? .on : .off
+        guard camera.isTorchModeSupported(mode), (try? camera.lockForConfiguration()) != nil else { return }
+        defer { camera.unlockForConfiguration() }
+        camera.torchMode = mode
     }
 
     @MainActor
@@ -61,19 +74,34 @@ struct ScannerScreen: View {
     let onEmergencyStop: () -> Void
     let onOpenSettings: () -> Void
     @Environment(\.dismiss) private var dismiss
+    @State private var isTorchOn = false
 
     var body: some View {
         NavigationStack {
             Group {
                 if isAvailable {
                     ZStack(alignment: .bottom) {
-                        QRScannerView(onScan: onScan).ignoresSafeArea()
-                        Text(instruction)
-                            .font(.headline)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                            .background(.black.opacity(0.75), in: .rect(cornerRadius: 14))
-                            .padding()
+                        QRScannerView(isTorchOn: isTorchOn, onScan: onScan).ignoresSafeArea()
+                        VStack(spacing: 12) {
+                            if AVCaptureDevice.default(for: .video)?.hasTorch == true {
+                                Button {
+                                    isTorchOn.toggle()
+                                } label: {
+                                    Label(
+                                        isTorchOn ? "Turn Off Flashlight" : "Turn On Flashlight",
+                                        systemImage: isTorchOn ? "flashlight.on.fill" : "flashlight.off.fill"
+                                    )
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .tint(isTorchOn ? .yellow : .gray)
+                            }
+                            Text(instruction)
+                                .font(.headline)
+                                .multilineTextAlignment(.center)
+                                .padding()
+                                .background(.black.opacity(0.75), in: .rect(cornerRadius: 14))
+                        }
+                        .padding()
                     }
                 } else {
                     ContentUnavailableView(
