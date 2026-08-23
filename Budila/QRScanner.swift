@@ -1,6 +1,6 @@
 import AVFoundation
 import SwiftUI
-import VisionKit
+import UIKit
 
 struct QRScannerView: UIViewControllerRepresentable {
     let isTorchOn: Bool
@@ -10,59 +10,96 @@ struct QRScannerView: UIViewControllerRepresentable {
         Coordinator(onScan: onScan)
     }
 
-    func makeUIViewController(context: Context) -> DataScannerViewController {
-        let controller = DataScannerViewController(
-            recognizedDataTypes: [.barcode(symbologies: [.qr])],
-            qualityLevel: .balanced,
-            recognizesMultipleItems: false,
-            isHighFrameRateTrackingEnabled: false,
-            isPinchToZoomEnabled: true,
-            isGuidanceEnabled: true,
-            isHighlightingEnabled: true
-        )
-        controller.delegate = context.coordinator
-        try? controller.startScanning()
+    func makeUIViewController(context: Context) -> UIViewController {
+        let controller = UIViewController()
+        let preview = CameraPreviewView()
+        preview.previewLayer.session = context.coordinator.session
+        preview.previewLayer.videoGravity = .resizeAspectFill
+        controller.view = preview
+        context.coordinator.start()
         return controller
     }
 
-    func updateUIViewController(_ controller: DataScannerViewController, context: Context) {
-        Self.setTorch(isTorchOn)
+    func updateUIViewController(_ controller: UIViewController, context: Context) {
+        context.coordinator.setTorch(isTorchOn)
     }
 
-    static func dismantleUIViewController(_ controller: DataScannerViewController, coordinator: Coordinator) {
-        setTorch(false)
-        controller.stopScanning()
+    static func dismantleUIViewController(_ controller: UIViewController, coordinator: Coordinator) {
+        coordinator.stop()
     }
 
-    private static func setTorch(_ isOn: Bool) {
-        guard let camera = AVCaptureDevice.default(for: .video), camera.hasTorch else { return }
-        let mode: AVCaptureDevice.TorchMode = isOn ? .on : .off
-        guard camera.isTorchModeSupported(mode), (try? camera.lockForConfiguration()) != nil else { return }
-        defer { camera.unlockForConfiguration() }
-        camera.torchMode = mode
+    final class CameraPreviewView: UIView {
+        override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+
+        var previewLayer: AVCaptureVideoPreviewLayer {
+            layer as! AVCaptureVideoPreviewLayer
+        }
     }
 
-    @MainActor
-    final class Coordinator: NSObject, DataScannerViewControllerDelegate {
+    final class Coordinator: NSObject, AVCaptureMetadataOutputObjectsDelegate, @unchecked Sendable {
         let onScan: (String) -> Void
-        var completed = false
+        let session = AVCaptureSession()
+        private let queue = DispatchQueue(label: "dev.xikxp1.budila.camera")
+        private var camera: AVCaptureDevice?
+        private var completed = false
 
         init(onScan: @escaping (String) -> Void) {
             self.onScan = onScan
         }
 
-        func dataScanner(
-            _ dataScanner: DataScannerViewController,
-            didAdd addedItems: [RecognizedItem],
-            allItems: [RecognizedItem]
+        func start() {
+            queue.async { [self] in
+                guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+                      let input = try? AVCaptureDeviceInput(device: camera),
+                      session.canAddInput(input) else { return }
+
+                let output = AVCaptureMetadataOutput()
+                guard session.canAddOutput(output) else { return }
+
+                session.beginConfiguration()
+                session.addInput(input)
+                session.addOutput(output)
+                output.setMetadataObjectsDelegate(self, queue: .main)
+                output.metadataObjectTypes = [.qr]
+                session.commitConfiguration()
+                self.camera = camera
+                session.startRunning()
+            }
+        }
+
+        func setTorch(_ isOn: Bool) {
+            queue.async { [self] in
+                setTorchNow(isOn)
+            }
+        }
+
+        func stop() {
+            queue.async { [self] in
+                setTorchNow(false)
+                session.stopRunning()
+            }
+        }
+
+        func metadataOutput(
+            _ output: AVCaptureMetadataOutput,
+            didOutput metadataObjects: [AVMetadataObject],
+            from connection: AVCaptureConnection
         ) {
             guard !completed else { return }
-            for case .barcode(let barcode) in addedItems {
-                guard let payload = barcode.payloadStringValue else { continue }
+            for case let code as AVMetadataMachineReadableCodeObject in metadataObjects {
+                guard code.type == .qr, let payload = code.stringValue else { continue }
                 completed = true
                 onScan(payload)
                 return
             }
+        }
+
+        private func setTorchNow(_ isOn: Bool) {
+            guard let camera, camera.hasTorch else { return }
+            let mode: AVCaptureDevice.TorchMode = isOn ? .on : .off
+            guard camera.isTorchModeSupported(mode), (try? camera.lockForConfiguration()) != nil else { return }
+            defer { camera.unlockForConfiguration() }
+            camera.torchMode = mode
         }
     }
 }
@@ -83,7 +120,7 @@ struct ScannerScreen: View {
                     ZStack(alignment: .bottom) {
                         QRScannerView(isTorchOn: isTorchOn, onScan: onScan).ignoresSafeArea()
                         VStack(spacing: 12) {
-                            if AVCaptureDevice.default(for: .video)?.hasTorch == true {
+                            if AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)?.hasTorch == true {
                                 Button {
                                     isTorchOn.toggle()
                                 } label: {

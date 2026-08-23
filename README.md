@@ -1,6 +1,6 @@
 # Budila
 
-Budila is an iPhone alarm clock for iOS 26.1 and later. It uses AlarmKit for system alarms and VisionKit to verify a pre-enrolled QR code.
+Budila is an iPhone alarm clock for iOS 26.1 and later. It uses AlarmKit for system alarms and AVFoundation to verify a pre-enrolled QR code.
 
 AlarmKit always performs its system stop action before Budila's intent runs. Budila works around that limit by scheduling a guard alarm 10 seconds later. A valid QR scan cancels the guard. This makes dismissal harder to skip, but iOS does not provide an unbypassable stop button.
 

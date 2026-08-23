@@ -2,7 +2,6 @@ import AlarmKit
 import AVFoundation
 import SwiftUI
 import UIKit
-import VisionKit
 
 enum ScannerPurpose: Identifiable, Equatable {
     case enroll
@@ -37,7 +36,8 @@ final class AppModel: ObservableObject {
     }
 
     var scannerAvailable: Bool {
-        DataScannerViewController.isSupported && DataScannerViewController.isAvailable
+        cameraAuthorization == .authorized
+            && AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) != nil
     }
 
     init() {
