@@ -37,6 +37,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     needs: test
     runs-on: macos-26
+    permissions:
+      contents: write
     env:
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
@@ -78,6 +80,18 @@ jobs:
             -authenticationKeyPath "$API_KEY_PATH" \
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Budila
+          path: ${{ runner.temp }}/export/Budila.ipa
+          if-no-files-found: error
+      - name: Publish latest IPA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view latest >/dev/null 2>&1 || gh release create latest --latest --title "Latest build" --notes "Built from $GITHUB_SHA" --target "$GITHUB_SHA"
+          gh release upload latest "$RUNNER_TEMP/export/Budila.ipa" --clobber
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v5
         with:
