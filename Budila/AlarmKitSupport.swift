@@ -46,10 +46,7 @@ enum AlarmScheduler {
         rootAlarmID: UUID,
         label: String
     ) -> Configuration {
-        let title = LocalizedStringResource(
-            String.LocalizationValue(stringLiteral: "\(label) · Scan QR to finish"),
-            bundle: .main
-        )
+        let title: LocalizedStringResource = "\(label) · Scan QR to finish"
         let snoozeButton = AlarmButton(
             text: "Snooze",
             textColor: .white,
