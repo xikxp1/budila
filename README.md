@@ -17,10 +17,8 @@ The project needs Xcode 26.1 or later. This Mac has Xcode 16.2, so use the inclu
 Create the App Store Connect record for `dev.xikxp1.budila`, then add these GitHub Actions secrets:
 
 - `APPLE_TEAM_ID`
-- `APPLE_DISTRIBUTION_CERTIFICATE_BASE64`
-- `APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD`
 - `ASC_KEY_ID`
 - `ASC_ISSUER_ID`
-- `ASC_PRIVATE_KEY_BASE64`
+- `ASC_PRIVATE_KEY`
 
-The two base64 secrets contain the raw `.p12` distribution certificate and `.p8` App Store Connect key. Pull requests and pushes to `main` run tests. A manual workflow run also archives and uploads build `github.run_number` to TestFlight.
+`ASC_PRIVATE_KEY` contains the raw contents of the `.p8` App Store Connect key. The API key must be allowed to use cloud-managed distribution certificates. Pull requests and pushes to `main` run tests. A manual workflow run archives without local signing, uses Xcode cloud signing to export the IPA, and uploads build `github.run_number` with `apple-actions/upload-testflight-build`.

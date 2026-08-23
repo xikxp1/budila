@@ -39,30 +39,17 @@ jobs:
     runs-on: macos-26
     env:
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
-      CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD }}
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-      ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install signing credentials
-        env:
-          KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Install App Store Connect API key
         run: |
-          CERTIFICATE_PATH="$RUNNER_TEMP/distribution.p12"
           API_KEY_PATH="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
-          KEYCHAIN_PATH="$RUNNER_TEMP/budila-signing.keychain-db"
-          printf '%s' "$CERTIFICATE_BASE64" | base64 -D > "$CERTIFICATE_PATH"
-          printf '%s' "$ASC_PRIVATE_KEY_BASE64" | base64 -D > "$API_KEY_PATH"
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security import "$CERTIFICATE_PATH" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          printf '%s' "$ASC_PRIVATE_KEY" > "$API_KEY_PATH"
+          chmod 600 "$API_KEY_PATH"
           echo "API_KEY_PATH=$API_KEY_PATH" >> "$GITHUB_ENV"
-          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
       - name: Archive
         run: |
           xcodebuild archive \
@@ -73,16 +60,13 @@ jobs:
             -archivePath "$RUNNER_TEMP/Budila.xcarchive" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$API_KEY_PATH" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
-      - name: Upload to TestFlight
+            CODE_SIGNING_ALLOWED=NO
+      - name: Export signed IPA
         run: |
           EXPORT_OPTIONS="$RUNNER_TEMP/ExportOptions.plist"
           plutil -create xml1 "$EXPORT_OPTIONS"
           plutil -insert method -string app-store-connect "$EXPORT_OPTIONS"
-          plutil -insert destination -string upload "$EXPORT_OPTIONS"
+          plutil -insert destination -string export "$EXPORT_OPTIONS"
           plutil -insert signingStyle -string automatic "$EXPORT_OPTIONS"
           plutil -insert teamID -string "$APPLE_TEAM_ID" "$EXPORT_OPTIONS"
           plutil -insert manageAppVersionAndBuildNumber -bool NO "$EXPORT_OPTIONS"
@@ -94,6 +78,13 @@ jobs:
             -authenticationKeyPath "$API_KEY_PATH" \
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID"
-      - name: Remove temporary keychain
-        if: always()
-        run: security delete-keychain "$KEYCHAIN_PATH" || true
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v5
+        with:
+          app-path: ${{ runner.temp }}/export/Budila.ipa
+          app-type: ios
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-private-key: ${{ secrets.ASC_PRIVATE_KEY }}
+          wait-for-processing: "true"
+          backend: appstore-api
