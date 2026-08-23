@@ -62,6 +62,8 @@ struct BudilaAlarmLiveActivity: Widget {
             Text("Paused")
         case .alert:
             Text("Scan to finish")
+        @unknown default:
+            Text("Alarm")
         }
     }
 }
