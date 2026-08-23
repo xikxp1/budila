@@ -23,6 +23,7 @@ struct RootView: View {
                 onEmergencyStop: model.emergencyStop,
                 onOpenSettings: model.openSettings
             )
+            .id(purpose.id)
         }
         .alert("Budila", isPresented: Binding(
             get: { model.scannerPurpose == nil && model.message != nil },
@@ -121,8 +122,11 @@ struct AlarmListView: View {
                                 onEdit: { editingAlarm = alarm },
                                 onToggle: { enabled in Task { await model.setEnabled(alarm, enabled: enabled) } }
                             )
+                            .disabled(model.isBusy(alarm.id))
                             .swipeActions {
-                                Button("Delete", role: .destructive) { model.delete(alarm) }
+                                if !model.isBusy(alarm.id) {
+                                    Button("Delete", role: .destructive) { model.delete(alarm) }
+                                }
                             }
                         }
                     }

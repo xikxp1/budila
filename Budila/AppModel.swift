@@ -21,6 +21,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var alarmAuthorization = AlarmManager.shared.authorizationState
     @Published private(set) var cameraAuthorization = AVCaptureDevice.authorizationStatus(for: .video)
     @Published private(set) var alarmStates: [UUID: Alarm.State] = [:]
+    @Published private(set) var busyAlarmIDs: Set<UUID> = []
     @Published var scannerPurpose: ScannerPurpose?
     @Published var message: String?
 
@@ -38,6 +39,10 @@ final class AppModel: ObservableObject {
     var scannerAvailable: Bool {
         cameraAuthorization == .authorized
             && AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) != nil
+    }
+
+    func isBusy(_ alarmID: UUID) -> Bool {
+        busyAlarmIDs.contains(alarmID)
     }
 
     init() {
@@ -102,8 +107,7 @@ final class AppModel: ObservableObject {
                 message = "That QR code does not match."
                 return false
             }
-            if finishAlarm(rootID: rootID) { scannerPurpose = nil }
-            return scannerPurpose == nil
+            return finishAlarm(rootID: rootID)
         case nil:
             return false
         }
@@ -111,7 +115,7 @@ final class AppModel: ObservableObject {
 
     func emergencyStop() {
         guard case .dismiss(let rootID) = scannerPurpose else { return }
-        if finishAlarm(rootID: rootID) { scannerPurpose = nil }
+        _ = finishAlarm(rootID: rootID)
     }
 
     func save(_ alarm: AlarmDefinition) async {
@@ -119,9 +123,15 @@ final class AppModel: ObservableObject {
             message = "Choose at least one weekday."
             return
         }
+        guard busyAlarmIDs.insert(alarm.id).inserted else {
+            message = "Wait for this alarm to finish updating."
+            return
+        }
+        defer { busyAlarmIDs.remove(alarm.id) }
         do {
             data = try store.update { data in
-                for id in data.removeSession(for: alarm.id) { try AlarmScheduler.cancel(id) }
+                for id in data.alarmIDsForRemoval(rootAlarmID: alarm.id) { try AlarmScheduler.cancel(id) }
+                data.removeSession(for: alarm.id)
             }
         } catch {
             message = error.localizedDescription
@@ -148,9 +158,15 @@ final class AppModel: ObservableObject {
     }
 
     func delete(_ alarm: AlarmDefinition) {
+        guard busyAlarmIDs.insert(alarm.id).inserted else {
+            message = "Wait for this alarm to finish updating."
+            return
+        }
+        defer { busyAlarmIDs.remove(alarm.id) }
         do {
             data = try store.update { data in
-                for id in data.removeSession(for: alarm.id) { try AlarmScheduler.cancel(id) }
+                for id in data.alarmIDsForRemoval(rootAlarmID: alarm.id) { try AlarmScheduler.cancel(id) }
+                data.removeSession(for: alarm.id)
                 data.alarms.removeAll { $0.id == alarm.id }
             }
             refresh()
@@ -179,6 +195,7 @@ final class AppModel: ObservableObject {
                 _ = data.completeScan(rootAlarmID: rootID)
             }
             refresh()
+            scannerPurpose = data.pendingScanRootID.map { .dismiss($0) }
             return true
         } catch {
             message = error.localizedDescription

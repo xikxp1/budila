@@ -46,7 +46,7 @@ final class BudilaTests: XCTestCase {
                 snoozesUsed: 2,
                 kind: .guardAlarm
             )],
-            pendingScanRootID: rootID
+            pendingScanRootIDs: [rootID]
         )
 
         let session = data.completeScan(rootAlarmID: rootID)
@@ -67,7 +67,7 @@ final class BudilaTests: XCTestCase {
                 snoozesUsed: 0,
                 kind: .snoozed
             )],
-            pendingScanRootID: pendingID
+            pendingScanRootIDs: [pendingID]
         )
 
         _ = data.completeScan(rootAlarmID: completedID)
@@ -75,7 +75,7 @@ final class BudilaTests: XCTestCase {
         XCTAssertEqual(data.pendingScanRootID, pendingID)
     }
 
-    func testRemovingSessionReturnsEveryAlarmIDAndClearsState() {
+    func testRemovalListsEveryAlarmIDRootLastAndClearsState() {
         let rootID = UUID()
         let activeID = UUID()
         let guardID = UUID()
@@ -87,14 +87,43 @@ final class BudilaTests: XCTestCase {
                 snoozesUsed: 1,
                 kind: .guardAlarm
             )],
-            pendingScanRootID: rootID
+            pendingScanRootIDs: [rootID]
         )
 
-        let alarmIDs = data.removeSession(for: rootID)
+        let alarmIDs = data.alarmIDsForRemoval(rootAlarmID: rootID)
+        data.removeSession(for: rootID)
 
-        XCTAssertEqual(alarmIDs, Set([rootID, activeID, guardID]))
+        XCTAssertEqual(Set(alarmIDs), Set([rootID, activeID, guardID]))
+        XCTAssertEqual(alarmIDs.last, rootID)
         XCTAssertTrue(data.sessions.isEmpty)
         XCTAssertNil(data.pendingScanRootID)
+    }
+
+    func testPendingScansRemainInArrivalOrder() {
+        let first = UUID()
+        let second = UUID()
+        var data = PersistedData()
+
+        data.enqueueScan(rootAlarmID: first)
+        data.enqueueScan(rootAlarmID: second)
+        data.enqueueScan(rootAlarmID: first)
+        _ = data.completeScan(rootAlarmID: first)
+
+        XCTAssertEqual(data.pendingScanRootIDs, [second])
+        XCTAssertEqual(data.pendingScanRootID, second)
+    }
+
+    func testLegacyPendingScanMigratesToQueue() throws {
+        let rootID = UUID()
+        let bytes = try JSONSerialization.data(withJSONObject: [
+            "alarms": [],
+            "sessions": [],
+            "pendingScanRootID": rootID.uuidString,
+        ])
+
+        let data = try JSONDecoder().decode(PersistedData.self, from: bytes)
+
+        XCTAssertEqual(data.pendingScanRootIDs, [rootID])
     }
 
     func testConcurrentStoreUpdatesDoNotLoseAlarms() throws {

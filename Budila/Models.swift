@@ -75,11 +75,13 @@ struct AlarmSession: Codable, Equatable, Identifiable {
     var id: UUID { rootAlarmID }
 }
 
-struct PersistedData: Codable, Equatable {
+struct PersistedData: Equatable {
     var alarms: [AlarmDefinition] = []
     var qrDigest: String?
     var sessions: [AlarmSession] = []
-    var pendingScanRootID: UUID?
+    var pendingScanRootIDs: [UUID] = []
+
+    var pendingScanRootID: UUID? { pendingScanRootIDs.first }
 
     mutating func upsert(_ alarm: AlarmDefinition) {
         if let index = alarms.firstIndex(where: { $0.id == alarm.id }) {
@@ -95,21 +97,59 @@ struct PersistedData: Codable, Equatable {
         sessions.append(session)
     }
 
+    mutating func enqueueScan(rootAlarmID: UUID) {
+        guard !pendingScanRootIDs.contains(rootAlarmID) else { return }
+        pendingScanRootIDs.append(rootAlarmID)
+    }
+
     mutating func completeScan(rootAlarmID: UUID) -> AlarmSession? {
-        if pendingScanRootID == rootAlarmID { pendingScanRootID = nil }
+        pendingScanRootIDs.removeAll { $0 == rootAlarmID }
         guard let index = sessions.firstIndex(where: { $0.rootAlarmID == rootAlarmID }) else { return nil }
         return sessions.remove(at: index)
     }
 
-    mutating func removeSession(for rootAlarmID: UUID) -> Set<UUID> {
-        var alarmIDs = Set([rootAlarmID])
+    func alarmIDsForRemoval(rootAlarmID: UUID) -> [UUID] {
+        var alarmIDs: [UUID] = []
         if let session = sessions.first(where: { $0.rootAlarmID == rootAlarmID }) {
-            alarmIDs.insert(session.activeAlarmID)
-            if let guardID = session.guardAlarmID { alarmIDs.insert(guardID) }
+            for id in [session.activeAlarmID, session.guardAlarmID].compactMap({ $0 })
+                where id != rootAlarmID && !alarmIDs.contains(id) {
+                alarmIDs.append(id)
+            }
         }
-        sessions.removeAll { $0.rootAlarmID == rootAlarmID }
-        if pendingScanRootID == rootAlarmID { pendingScanRootID = nil }
+        // Cancel the recurring root last so a child failure cannot silently disable it.
+        alarmIDs.append(rootAlarmID)
         return alarmIDs
+    }
+
+    mutating func removeSession(for rootAlarmID: UUID) {
+        sessions.removeAll { $0.rootAlarmID == rootAlarmID }
+        pendingScanRootIDs.removeAll { $0 == rootAlarmID }
+    }
+}
+
+extension PersistedData: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case alarms, qrDigest, sessions, pendingScanRootIDs, pendingScanRootID
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        alarms = try values.decodeIfPresent([AlarmDefinition].self, forKey: .alarms) ?? []
+        qrDigest = try values.decodeIfPresent(String.self, forKey: .qrDigest)
+        sessions = try values.decodeIfPresent([AlarmSession].self, forKey: .sessions) ?? []
+        if let ids = try values.decodeIfPresent([UUID].self, forKey: .pendingScanRootIDs) {
+            pendingScanRootIDs = ids
+        } else if let id = try values.decodeIfPresent(UUID.self, forKey: .pendingScanRootID) {
+            pendingScanRootIDs = [id]
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(alarms, forKey: .alarms)
+        try values.encodeIfPresent(qrDigest, forKey: .qrDigest)
+        try values.encode(sessions, forKey: .sessions)
+        try values.encode(pendingScanRootIDs, forKey: .pendingScanRootIDs)
     }
 }
 

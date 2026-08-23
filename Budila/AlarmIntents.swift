@@ -44,7 +44,7 @@ struct ScanToStopIntent: LiveActivityIntent {
                     kind: .guardAlarm
                 ))
             }
-            data.pendingScanRootID = rootID
+            data.enqueueScan(rootAlarmID: rootID)
         }
         return .result()
     }
@@ -86,7 +86,7 @@ struct SnoozeAlarmIntent: LiveActivityIntent {
                     ))
                 }
             }
-            data.pendingScanRootID = rootID
+            data.enqueueScan(rootAlarmID: rootID)
         }
         return .result()
     }
