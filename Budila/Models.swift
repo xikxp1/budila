@@ -145,6 +145,13 @@ struct PersistedData: Equatable {
         sessions.removeAll { $0.rootAlarmID == rootAlarmID }
         pendingScanRootIDs.removeAll { $0 == rootAlarmID }
     }
+
+    mutating func resetForEmergency() {
+        qrDigest = nil
+        for index in alarms.indices { alarms[index].enabled = false }
+        sessions.removeAll()
+        pendingScanRootIDs.removeAll()
+    }
 }
 
 extension PersistedData: Codable {

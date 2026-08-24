@@ -20,7 +20,7 @@ struct RootView: View {
                 isAvailable: model.scannerAvailable,
                 message: $model.message,
                 onScan: model.handleScannedPayload,
-                onEmergencyStop: model.emergencyStop,
+                onEmergencyRecovery: { Task { await model.emergencyRecovery() } },
                 onOpenSettings: model.openSettings
             )
             .id(purpose.id)
@@ -137,13 +137,12 @@ struct AlarmListView: View {
             .navigationTitle("Alarms")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        model.beginEnrollment()
+                    NavigationLink {
+                        SettingsView()
                     } label: {
-                        Image(systemName: "qrcode.viewfinder")
+                        Image(systemName: "gearshape")
                     }
-                    .disabled(model.hasActiveAlarm)
-                    .accessibilityLabel("Replace enrolled QR code")
+                    .accessibilityLabel("Settings")
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -159,6 +158,50 @@ struct AlarmListView: View {
             AlarmEditor(alarm: alarm) { updated in
                 Task { await model.save(updated) }
             }
+        }
+    }
+}
+
+struct SettingsView: View {
+    @EnvironmentObject private var model: AppModel
+    @State private var showingEmergencyRecovery = false
+
+    var body: some View {
+        Form {
+            Section {
+                Button {
+                    model.beginEnrollment()
+                } label: {
+                    Label("Replace QR Code", systemImage: "qrcode.viewfinder")
+                }
+                .disabled(model.hasActiveAlarm)
+            } header: {
+                Text("QR Code")
+            } footer: {
+                if model.hasActiveAlarm {
+                    Text("Finish the active alarm before replacing the QR code.")
+                }
+            }
+
+            Section("Emergency Recovery") {
+                Text("Stops every Budila alarm, clears the enrolled QR code, and disables all alarms until you enroll a new code.")
+                Button("Emergency Recovery", role: .destructive) {
+                    showingEmergencyRecovery = true
+                }
+            }
+        }
+        .navigationTitle("Settings")
+        .confirmationDialog(
+            "Reset QR and Pause All Alarms?",
+            isPresented: $showingEmergencyRecovery,
+            titleVisibility: .visible
+        ) {
+            Button("Reset QR and Pause All Alarms", role: .destructive) {
+                Task { await model.emergencyRecovery() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This stops every Budila alarm, clears the enrolled QR code, and disables all alarms. You will need to enroll a new QR code and turn alarms back on.")
         }
     }
 }

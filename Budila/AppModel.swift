@@ -1,5 +1,6 @@
 import AlarmKit
 import AVFoundation
+import LocalAuthentication
 import SwiftUI
 import UIKit
 
@@ -113,9 +114,43 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func emergencyStop() {
-        guard case .dismiss(let rootID) = scannerPurpose else { return }
-        _ = finishAlarm(rootID: rootID)
+    func emergencyRecovery() async {
+        guard busyAlarmIDs.isEmpty else {
+            message = "Wait for alarm updates to finish, then try emergency recovery again."
+            return
+        }
+        let context = LAContext()
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil) else {
+            message = "Emergency recovery requires Face ID, Touch ID, or an iPhone passcode. Set one up in Settings and try again."
+            return
+        }
+
+        do {
+            guard try await context.evaluatePolicy(
+                .deviceOwnerAuthentication,
+                localizedReason: "Reset the QR code and pause all Budila alarms."
+            ) else { return }
+        } catch {
+            let code = LAError.Code(rawValue: (error as NSError).code)
+            if code == .userCancel || code == .appCancel || code == .systemCancel { return }
+            message = error.localizedDescription
+            return
+        }
+
+        do {
+            data = try store.update { data in
+                for alarm in try AlarmManager.shared.alarms {
+                    try AlarmScheduler.cancel(alarm.id)
+                }
+                data.resetForEmergency()
+            }
+            refresh()
+            scannerPurpose = nil
+            message = "Emergency recovery complete. Enroll a new QR code, then turn alarms back on."
+        } catch {
+            message = error.localizedDescription
+            refresh()
+        }
     }
 
     func save(_ alarm: AlarmDefinition) async {

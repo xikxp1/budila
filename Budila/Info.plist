@@ -26,6 +26,8 @@
     <string>Budila schedules the alarms you create and shows their snooze countdowns.</string>
     <key>NSCameraUsageDescription</key>
     <string>Budila scans your chosen QR code before completing an alarm.</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Budila uses Face ID to confirm emergency QR recovery.</string>
     <key>NSSupportsLiveActivities</key>
     <true/>
     <key>UIApplicationSceneManifest</key>

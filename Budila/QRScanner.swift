@@ -164,11 +164,12 @@ struct ScannerScreen: View {
     let isAvailable: Bool
     @Binding var message: String?
     let onScan: (String) -> Bool
-    let onEmergencyStop: () -> Void
+    let onEmergencyRecovery: () -> Void
     let onOpenSettings: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var isTorchOn = false
     @State private var scannerFailed = false
+    @State private var showingEmergencyRecovery = false
 
     var body: some View {
         NavigationStack {
@@ -199,6 +200,13 @@ struct ScannerScreen: View {
                                 .multilineTextAlignment(.center)
                                 .padding()
                                 .background(.black.opacity(0.75), in: .rect(cornerRadius: 14))
+                            if case .dismiss = purpose {
+                                Button("Emergency Recovery", role: .destructive) {
+                                    showingEmergencyRecovery = true
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.red)
+                            }
                         }
                         .padding()
                     }
@@ -216,7 +224,9 @@ struct ScannerScreen: View {
                             Button("Open Settings", action: onOpenSettings)
                                 .buttonStyle(.borderedProminent)
                             if case .dismiss = purpose {
-                                Button("Emergency Stop", role: .destructive, action: onEmergencyStop)
+                                Button("Emergency Recovery", role: .destructive) {
+                                    showingEmergencyRecovery = true
+                                }
                             }
                         }
                         .padding()
@@ -234,6 +244,16 @@ struct ScannerScreen: View {
             }
         }
         .interactiveDismissDisabled(purpose != .enroll)
+        .confirmationDialog(
+            "Reset QR and Pause All Alarms?",
+            isPresented: $showingEmergencyRecovery,
+            titleVisibility: .visible
+        ) {
+            Button("Reset QR and Pause All Alarms", role: .destructive, action: onEmergencyRecovery)
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This stops every Budila alarm, clears the enrolled QR code, and disables all alarms. You will need to enroll a new QR code and turn alarms back on.")
+        }
         .alert("Budila", isPresented: Binding(
             get: { message != nil },
             set: { if !$0 { message = nil } }

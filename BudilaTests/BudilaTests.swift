@@ -121,6 +121,35 @@ final class BudilaTests: XCTestCase {
         XCTAssertNil(data.pendingScanRootID)
     }
 
+    func testEmergencyResetDisablesAlarmsAndClearsQRState() {
+        let rootID = UUID()
+        let guardID = UUID()
+        var data = PersistedData(
+            alarms: [
+                AlarmDefinition(hour: 6, minute: 30, label: "Early", enabled: true),
+                AlarmDefinition(hour: 9, minute: 0, label: "Late", enabled: false),
+            ],
+            qrDigest: QRCodeDigest.make("lost-code"),
+            sessions: [AlarmSession(
+                rootAlarmID: rootID,
+                activeAlarmID: guardID,
+                guardAlarmID: guardID,
+                snoozesUsed: 2,
+                kind: .guardAlarm
+            )],
+            pendingScanRootIDs: [rootID]
+        )
+        var expectedAlarms = data.alarms
+        for index in expectedAlarms.indices { expectedAlarms[index].enabled = false }
+
+        data.resetForEmergency()
+
+        XCTAssertEqual(data.alarms, expectedAlarms)
+        XCTAssertNil(data.qrDigest)
+        XCTAssertTrue(data.sessions.isEmpty)
+        XCTAssertTrue(data.pendingScanRootIDs.isEmpty)
+    }
+
     func testPendingScansRemainInArrivalOrder() {
         let first = UUID()
         let second = UUID()
