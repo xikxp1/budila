@@ -35,6 +35,28 @@ final class BudilaTests: XCTestCase {
         XCTAssertFalse(SnoozeLimit.allows(2))
     }
 
+    func testGuardUsesRemainingSnoozeSlotsThenOneMinute() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        let alarm = AlarmDefinition(hour: 8, minute: 0)
+        let date: (Int, Int) -> Date = { minute, second in
+            calendar.date(from: DateComponents(
+                year: 2026,
+                month: 8,
+                day: 24,
+                hour: 8,
+                minute: minute,
+                second: second
+            ))!
+        }
+
+        XCTAssertEqual(alarm.nextGuardDate(after: date(2, 0), calendar: calendar), date(3, 0))
+        XCTAssertEqual(alarm.nextGuardDate(after: date(3, 0), calendar: calendar), date(6, 0))
+        XCTAssertEqual(alarm.nextGuardDate(after: date(5, 59), calendar: calendar), date(6, 0))
+        XCTAssertEqual(alarm.nextGuardDate(after: date(6, 0), calendar: calendar), date(7, 0))
+        XCTAssertEqual(alarm.nextGuardDate(after: date(7, 0), calendar: calendar), date(8, 0))
+    }
+
     func testCompletingScanRemovesGuardSession() {
         let rootID = UUID()
         let guardID = UUID()

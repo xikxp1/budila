@@ -24,16 +24,23 @@ struct ScanToStopIntent: LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         guard let rootID = UUID(uuidString: rootAlarmID) else { return .result() }
+        let store = BudilaStore()
+        let alarm = store.load().alarms.first { $0.id == rootID }
         let guardID = UUID()
         let guardScheduled: Bool
         do {
-            try await AlarmScheduler.scheduleGuard(id: guardID, rootAlarmID: rootID, label: label)
+            try await AlarmScheduler.scheduleGuard(
+                id: guardID,
+                rootAlarmID: rootID,
+                label: label,
+                alarm: alarm
+            )
             guardScheduled = true
         } catch {
             guardScheduled = false
         }
 
-        BudilaStore().update { data in
+        store.update { data in
             let used = data.sessions.first(where: { $0.rootAlarmID == rootID })?.snoozesUsed ?? 0
             if guardScheduled {
                 data.upsert(AlarmSession(

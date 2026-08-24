@@ -54,6 +54,26 @@ struct AlarmDefinition: Codable, Equatable, Identifiable {
         Calendar.current.date(from: DateComponents(hour: hour, minute: minute)) ?? .now
     }
 
+    func nextGuardDate(after now: Date = .now, calendar: Calendar = .current) -> Date {
+        var components = calendar.dateComponents([.year, .month, .day], from: now)
+        components.hour = hour
+        components.minute = minute
+        components.second = 0
+        guard var alarmDate = calendar.date(from: components) else { return now.addingTimeInterval(60) }
+        if alarmDate > now {
+            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: alarmDate) else {
+                return now.addingTimeInterval(60)
+            }
+            alarmDate = previousDay
+        }
+
+        for snooze in 1...SnoozeLimit.maximum {
+            let date = alarmDate.addingTimeInterval(SnoozeLimit.duration * Double(snooze))
+            if date > now { return date }
+        }
+        return now.addingTimeInterval(60)
+    }
+
     var daysDescription: String {
         if weekdays.count == BudilaWeekday.allCases.count { return "Every day" }
         return BudilaWeekday.allCases.filter(weekdays.contains).map(\.shortName).joined(separator: " ")
@@ -212,6 +232,7 @@ enum QRCodeDigest {
 
 enum SnoozeLimit {
     static let maximum = 2
+    static let duration: TimeInterval = 180
 
     static func allows(_ used: Int) -> Bool {
         used < maximum

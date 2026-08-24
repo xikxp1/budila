@@ -19,9 +19,15 @@ enum AlarmScheduler {
         _ = try await AlarmManager.shared.schedule(id: alarm.id, configuration: configuration)
     }
 
-    static func scheduleGuard(id: UUID, rootAlarmID: UUID, label: String) async throws {
+    static func scheduleGuard(
+        id: UUID,
+        rootAlarmID: UUID,
+        label: String,
+        alarm: AlarmDefinition?
+    ) async throws {
+        let now = Date.now
         let configuration = makeConfiguration(
-            schedule: .fixed(.now.addingTimeInterval(10)),
+            schedule: .fixed(alarm?.nextGuardDate(after: now) ?? now.addingTimeInterval(60)),
             alarmID: id,
             rootAlarmID: rootAlarmID,
             label: label
@@ -64,7 +70,7 @@ enum AlarmScheduler {
             tintColor: .orange
         )
         return Configuration(
-            countdownDuration: .init(preAlert: nil, postAlert: 180),
+            countdownDuration: .init(preAlert: nil, postAlert: SnoozeLimit.duration),
             schedule: schedule,
             attributes: attributes,
             stopIntent: ScanToStopIntent(
