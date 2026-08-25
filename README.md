@@ -1,6 +1,6 @@
 # Budila
 
-Budila is an iPhone alarm clock for iOS 26.1 and later. Use has to scan QR code to stop the alarm
+Budila is an iPhone alarm clock for iOS 26.1 and later. User has to scan QR code to stop the alarm
 
 ## Install
 
