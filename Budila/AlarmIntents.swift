@@ -5,6 +5,7 @@ struct ScanToStopIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Scan to Stop"
     static let description = IntentDescription("Opens Budila and waits for the enrolled QR code.")
     static let openAppWhenRun = true
+    static var isDiscoverable = false
 
     @Parameter(title: "Alarm ID") var alarmID: String
     @Parameter(title: "Root alarm ID") var rootAlarmID: String
@@ -61,6 +62,7 @@ struct SnoozeAlarmIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Snooze"
     static let description = IntentDescription("Snoozes a Budila alarm for three minutes.")
     static let openAppWhenRun = true
+    static var isDiscoverable = false
 
     @Parameter(title: "Alarm ID") var alarmID: String
     @Parameter(title: "Root alarm ID") var rootAlarmID: String

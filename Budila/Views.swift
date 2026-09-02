@@ -119,6 +119,7 @@ struct AlarmListView: View {
                         ForEach(model.data.alarms) { alarm in
                             AlarmRow(
                                 alarm: alarm,
+                                isMissingFromAlarmKit: alarm.enabled && model.alarmStates[alarm.id] == nil,
                                 onEdit: { editingAlarm = alarm },
                                 onToggle: { enabled in Task { await model.setEnabled(alarm, enabled: enabled) } }
                             )
@@ -208,6 +209,7 @@ struct SettingsView: View {
 
 private struct AlarmRow: View {
     let alarm: AlarmDefinition
+    let isMissingFromAlarmKit: Bool
     let onEdit: () -> Void
     let onToggle: (Bool) -> Void
 
@@ -222,6 +224,11 @@ private struct AlarmRow: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                    if isMissingFromAlarmKit {
+                        Label("Not scheduled by iOS", systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }

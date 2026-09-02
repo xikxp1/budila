@@ -70,7 +70,7 @@ enum AlarmScheduler {
             tintColor: .orange
         )
         return Configuration(
-            countdownDuration: .init(preAlert: nil, postAlert: SnoozeLimit.duration),
+            countdownDuration: .init(preAlert: 1, postAlert: SnoozeLimit.duration),
             schedule: schedule,
             attributes: attributes,
             stopIntent: ScanToStopIntent(
